@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Search Results - Google Maps Places</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex">
+            <div class="flex-shrink-0 flex items-center">
+              <a href="/" class="text-indigo-600 hover:text-indigo-800">
+                <i class="fas fa-map-marker-alt text-2xl"></i>
+                <span class="ml-2 text-xl font-semibold"
+                  >Places Search Amos</span
+                >
+              </a>
+            </div>
+          </div>
+          <div class="flex items-center">
+            <a
+              href="/"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-white hover:bg-gray-50"
+            >
+              <i class="fas fa-search mr-2"></i>
+              New Search
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Search Results</h1>
+        <p class="text-gray-600">
+          Showing results for:
+          <span class="font-medium text-indigo-600"><%= query %></span>
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% places.forEach(function(place) { %>
+        <div
+          class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden"
+        >
+          <% if (place.photo) { %>
+          <div class="relative w-full h-48">
+            <!-- Debug output -->
+            <div class="hidden">Debug - Photo URL: <%= place.photo %></div>
+            <img
+              src="/proxy-image?url=<%= encodeURIComponent(place.photo) %>"
+              alt="<%= place.name %>"
+              class="absolute inset-0 w-full h-full object-cover"
+              onerror="console.log('Image failed to load:', this.src)"
+            />
+          </div>
+          <% } %>
+          <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">
+              <%= place.name %>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4"><%= place.full_address %></p>
+
+            <div class="space-y-2">
+              <% if (place.rating) { %>
+              <div class="flex items-center text-sm">
+                <div class="flex items-center text-yellow-400">
+                  <% for(let i = 0; i < Math.floor(place.rating); i++) { %>
+                  <i class="fas fa-star"></i>
+                  <% } %> <% if (place.rating % 1 !== 0) { %>
+                  <i class="fas fa-star-half-alt"></i>
+                  <% } %>
+                </div>
+                <span class="ml-2 text-gray-600"
+                  >(<%= place.reviews %> reviews)</span
+                >
+              </div>
+              <% } %> <% if (place.phone) { %>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-phone-alt w-5"></i>
+                <a href="tel:<%= place.phone %>" class="hover:text-indigo-600"
+                  ><%= place.phone %></a
+                >
+              </div>
+              <% } %> <% if (place.site) { %>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-globe w-5"></i>
+                <a
+                  href="<%= place.site %>"
+                  target="_blank"
+                  class="hover:text-indigo-600 truncate"
+                  ><%= place.site %></a
+                >
+              </div>
+              <% } %> <% if (place.working_hours) { %>
+              <div class="flex items-start text-sm text-gray-600">
+                <i class="fas fa-clock w-5 mt-1"></i>
+                <div class="ml-2">
+                  <% Object.entries(place.working_hours).forEach(function([day,
+                  hours]) { %>
+                  <div class="flex justify-between">
+                    <span class="font-medium"><%= day %>:</span>
+                    <span><%= hours %></span>
+                  </div>
+                  <% }); %>
+                </div>
+              </div>
+              <% } %>
+            </div>
+
+            <div
+              class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center"
+            >
+              <a
+                href="<%= place.location_link %>"
+                target="_blank"
+                class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-800"
+              >
+                <i class="fas fa-map-marker-alt mr-2"></i>
+                View on Google Maps
+              </a>
+              <button
+                data-place='<%= Buffer.from(JSON.stringify(place)).toString('base64') %>'
+                onclick="openDetailModal(this)"
+                class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <i class="fas fa-info-circle mr-2"></i>
+                View Details
+              </button>
+            </div>
+          </div>
+        </div>
+        <% }); %>
+      </div>
+    </main>
+
+    <!-- Detail Modal -->
+    <div
+      id="detailModal"
+      class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden"
+      onclick="closeDetailModal()"
+    >
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div
+          class="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden"
+          onclick="event.stopPropagation()"
+        >
+          <!-- Modal Header -->
+          <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+              <h3
+                id="modalTitle"
+                class="text-xl font-semibold text-gray-900"
+              ></h3>
+              <button
+                onclick="closeDetailModal()"
+                class="text-gray-400 hover:text-gray-500"
+              >
+                <i class="fas fa-times text-xl"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Modal Content -->
+          <div class="flex flex-col md:flex-row h-[calc(90vh-8rem)]">
+            <!-- Business Details Section -->
+            <div
+              class="w-full md:w-1/2 p-6 border-r border-gray-200 overflow-y-auto"
+            >
+              <div id="businessDetails" class="space-y-6">
+                <!-- Content will be populated by JavaScript -->
+              </div>
+            </div>
+
+            <!-- Reviews Section -->
+            <div class="w-full md:w-1/2 p-6 overflow-y-auto">
+              <h4 class="text-lg font-semibold text-gray-900 mb-4">Reviews</h4>
+              <div id="reviewsList" class="space-y-6">
+                <!-- Content will be populated by JavaScript -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function openDetailModal(button) {
+        const place = JSON.parse(atob(button.dataset.place));
+        const modal = document.getElementById("detailModal");
+        const modalTitle = document.getElementById("modalTitle");
+        const businessDetails = document.getElementById("businessDetails");
+        const reviewsList = document.getElementById("reviewsList");
+
+        console.log("place", place);
+
+        // Set modal title
+        modalTitle.textContent = place.name;
+
+        // Populate business details
+        businessDetails.innerHTML = `
+          <div class="space-y-4">
+            ${
+              place.photo
+                ? `
+              <div class="relative w-full h-48 rounded-lg overflow-hidden">
+                <img src="/proxy-image?url=${encodeURIComponent(
+                  place.photo
+                )}" alt="${place.name}" class="w-full h-full object-cover">
+              </div>
+            `
+                : ""
+            }
+            
+            <div class="space-y-2">
+              <div class="flex items-center text-sm">
+                <i class="fas fa-map-marker-alt w-5 text-gray-400"></i>
+                <span class="text-gray-600">${place.full_address}</span>
+              </div>
+              
+              ${
+                place.rating
+                  ? `
+                <div class="flex items-center text-sm">
+                  <div class="flex items-center text-yellow-400">
+                    ${Array(Math.floor(place.rating))
+                      .fill()
+                      .map(() => '<i class="fas fa-star"></i>')
+                      .join("")}
+                    ${
+                      place.rating % 1 !== 0
+                        ? '<i class="fas fa-star-half-alt"></i>'
+                        : ""
+                    }
+                  </div>
+                  <span class="ml-2 text-gray-600">(${
+                    place.reviews
+                  } reviews)</span>
+                </div>
+              `
+                  : ""
+              }
+              
+              ${
+                place.phone
+                  ? `
+                <div class="flex items-center text-sm">
+                  <i class="fas fa-phone-alt w-5 text-gray-400"></i>
+                  <a href="tel:${place.phone}" class="text-indigo-600 hover:text-indigo-800">${place.phone}</a>
+                </div>
+              `
+                  : ""
+              }
+              
+              ${
+                place.site
+                  ? `
+                <div class="flex items-center text-sm">
+                  <i class="fas fa-globe w-5 text-gray-400"></i>
+                  <a href="${place.site}" target="_blank" class="text-indigo-600 hover:text-indigo-800 truncate">${place.site}</a>
+                </div>
+              `
+                  : ""
+              }
+            </div>
+
+            ${
+              place.working_hours
+                ? `
+              <div class="border-t border-gray-200 pt-4">
+                <h5 class="text-sm font-medium text-gray-900 mb-2">Working Hours</h5>
+                <div class="space-y-1">
+                  ${Object.entries(place.working_hours)
+                    .map(
+                      ([day, hours]) => `
+                    <div class="flex justify-between text-sm">
+                      <span class="font-medium text-gray-600">${day}:</span>
+                      <span class="text-gray-600">${hours}</span>
+                    </div>
+                  `
+                    )
+                    .join("")}
+                </div>
+              </div>
+            `
+                : ""
+            }
+          </div>
+        `;
+
+        // Populate reviews
+        if (place.reviews_data && place.reviews_data.length > 0) {
+          reviewsList.innerHTML = place.reviews_data
+            .map(
+              (review) => `
+            <div class="bg-gray-50 rounded-lg p-4">
+              <div class="flex items-start space-x-3">
+                <img src="/proxy-image?url=${encodeURIComponent(
+                  review.author_image
+                )}" alt="${review.author_title}" 
+                     class="w-10 h-10 rounded-full object-cover">
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <h5 class="font-medium text-gray-900">${
+                      review.author_title
+                    }</h5>
+                    <div class="flex items-center text-yellow-400 text-sm">
+                      ${Array(review.review_rating)
+                        .fill()
+                        .map(() => '<i class="fas fa-star"></i>')
+                        .join("")}
+                    </div>
+                  </div>
+                  <p class="text-sm text-gray-500 mt-1">${new Date(
+                    review.review_datetime_utc
+                  ).toLocaleDateString()}</p>
+                  <p class="text-gray-600 mt-2">${review.review_text}</p>
+                  ${
+                    review.review_img_urls && review.review_img_urls.length > 0
+                      ? `
+                    <div class="mt-3 grid grid-cols-2 gap-2">
+                      ${review.review_img_urls
+                        .map(
+                          (img) => `
+                        <img src="/proxy-image?url=${encodeURIComponent(
+                          img
+                        )}" alt="Review image" 
+                             class="w-full h-24 object-cover rounded-lg">
+                      `
+                        )
+                        .join("")}
+                    </div>
+                  `
+                      : ""
+                  }
+                  ${
+                    review.owner_answer
+                      ? `
+                    <div class="mt-3 bg-white rounded-lg p-3">
+                      <p class="text-sm font-medium text-gray-900">Owner's Response</p>
+                      <p class="text-sm text-gray-600 mt-1">${review.owner_answer}</p>
+                    </div>
+                  `
+                      : ""
+                  }
+                </div>
+              </div>
+            </div>
+          `
+            )
+            .join("");
+        } else {
+          reviewsList.innerHTML = `
+            <div class="text-center py-8">
+              <i class="fas fa-comments text-gray-400 text-4xl mb-2"></i>
+              <p class="text-gray-500">No reviews available</p>
+            </div>
+          `;
+        }
+
+        // Show modal
+        modal.classList.remove("hidden");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeDetailModal() {
+        const modal = document.getElementById("detailModal");
+        modal.classList.add("hidden");
+        document.body.style.overflow = "";
+      }
+
+      // Close modal on escape key
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          closeDetailModal();
+        }
+      });
+    </script>
+  </body>
+</html>

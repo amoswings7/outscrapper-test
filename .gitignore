@@ -58,7 +58,6 @@ out/
 
 # Nuxt.js
 .nuxt/
-dist/
 
 # Vuepress
 .vuepress/dist/
@@ -71,8 +70,6 @@ dist/
 .svelte-kit/
 build/
 
-# Vite
-dist/
 
 # React Native
 ios/Pods/
